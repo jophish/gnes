@@ -1,4 +1,8 @@
 package gnes
 
-type Mmu struct {
+type mmu struct {
+}
+
+func newMmu() *mmu {
+	return &mmu{}
 }

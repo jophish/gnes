@@ -3,27 +3,28 @@ package gnes
 import "io/ioutil"
 import "errors"
 import "bytes"
+import "fmt"
 
 const (
-	NES2_MASK            = b1100
-	MIRROR_MASK          = b1
-	BATBACK_MASK         = b10
-	TRAINER_MASK         = b100
-	MIRROR_OVERRIDE_MASK = b1000
-	MAPPER_LOW_NIB_MASK  = b11110000
-	MAPPER_HI_NIB_MASK   = b11110000
-	VS_MASK              = b1
-	PC10_MASK            = b10
+	NES2_MASK            = 0xc
+	MIRROR_MASK          = 0x1
+	BATBACK_MASK         = 0x2
+	TRAINER_MASK         = 0x4
+	MIRROR_OVERRIDE_MASK = 0x8
+	MAPPER_LOW_NIB_MASK  = 0xf0
+	MAPPER_HI_NIB_MASK   = 0xf0
+	VS_MASK              = 0x1
+	PC10_MASK            = 0x2
 )
 
 const (
-	NES2_FLAG            = b1000
-	MIRROR_FLAG          = b1
-	BATBACK_FLAG         = b10
-	TRAINER_FLAG         = b100
-	MIRROR_OVERRIDE_FLAG = b1000
-	VS_FLAG              = b1
-	PC10_FLAG            = b10
+	NES2_FLAG            = 0x8
+	MIRROR_FLAG          = 0x1
+	BATBACK_FLAG         = 0x2
+	TRAINER_FLAG         = 0x4
+	MIRROR_OVERRIDE_FLAG = 0x8
+	VS_FLAG              = 0x1
+	PC10_FLAG            = 0x2
 )
 
 // cartInfo contains iNES and NES 2.0 header information
@@ -52,11 +53,23 @@ type emuInfo struct {
 	cartInfo   *cartInfo
 }
 type Emulator struct {
-	cpu  *Cpu
-	mmu  *Mmu
+	cpu  *cpu
+	mmu  *mmu
 	info *emuInfo
 }
 
+func NewEmulator() *Emulator {
+	emu := &Emulator{}
+	emu.info = newEmuInfo()
+	emu.mmu = newMmu()
+	return emu
+}
+
+func newEmuInfo() *emuInfo {
+	emuInfo := &emuInfo{}
+	emuInfo.cartInfo = &cartInfo{}
+	return emuInfo
+}
 func (emu *Emulator) LoadRom(path string) error {
 	var err error
 	rom, err := ioutil.ReadFile(path)
@@ -76,23 +89,23 @@ func (info *emuInfo) getCartInfo(rom []byte) error {
 	if !bytes.Equal(rom[0:4], nesConstant) {
 		return errors.New("Invalid .nes header")
 	}
-
+	cartInfo := info.cartInfo
 	// Check if it's iNES or NES 2.0
-	info.nes2 = (rom[7] & NES2_MASK) == NES2_FLAG
+	cartInfo.nes2 = (rom[7] & NES2_MASK) == NES2_FLAG
 
 	// These flags are the same between file formats
-	info.mirror = (rom[6] & MIRROR_MASK) == MIRROR_FLAG
-	info.batBacked = (rom[6] & BATBACK_MASK) == BATBACK_FLAG
-	info.trainerLoc = (rom[6] & TRAINER_MASK) == TRAINER_FLAG
-	info.overrideMirror = (rom[6] & MIRROR_OVERRIDE_MASK) == MIRROR_OVERRIDE_FLAG
+	cartInfo.mirror = (rom[6] & MIRROR_MASK) == MIRROR_FLAG
+	cartInfo.batBacked = (rom[6] & BATBACK_MASK) == BATBACK_FLAG
+	cartInfo.trainerLoc = (rom[6] & TRAINER_MASK) == TRAINER_FLAG
+	cartInfo.overrideMirror = (rom[6] & MIRROR_OVERRIDE_MASK) == MIRROR_OVERRIDE_FLAG
 	// We append the upper 4 bits of the mapper later in the case of NES 2.0
-	info.mapper = ((rom[6] & MAPPER_LOW_NIB_MASK) >> 4) | (rom[7] & MAPPER_HI_NIB_MASK)
+	cartInfo.mapper = uint16(((rom[6] & MAPPER_LOW_NIB_MASK) >> 4) | (rom[7] & MAPPER_HI_NIB_MASK))
 	// The remainder of the header processing is dependent on the file format
-	if info.nes2 {
+	if cartInfo.nes2 {
 
 	} else {
 
 	}
-
+	fmt.Printf("%+v\n", *cartInfo)
 	return nil
 }

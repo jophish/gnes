@@ -10,6 +10,6 @@ type registers struct {
 	f        *cpuFlags
 }
 
-type Cpu struct {
+type cpu struct {
 	nes_regs *registers
 }
