@@ -5,7 +5,7 @@ import "fmt"
 
 func main() {
 	nesEmu := gnes.NewEmulator()
-	err := nesEmu.LoadRom("roms/mario.nes")
+	err := nesEmu.LoadRom("roms/cpu.nes")
 	if err != nil {
 		fmt.Println(err)
 	}
