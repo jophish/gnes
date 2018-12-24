@@ -1,15 +1,26 @@
 package gnes
 
-type cpuFlags struct {
-	n, v, b, d, i, z, c bool
-}
-
 type registers struct {
 	pc       uint16
 	sp, x, y uint8
-	f        *cpuFlags
+	// flags register
+	n, v, b, d, i, z, c bool
 }
 
 type cpu struct {
-	nes_regs *registers
+	mmu  *mmu
+	regs *registers
+}
+
+func newRegs() *registers {
+	return &registers{}
+}
+
+// We pass an mmu instance to the cpu instead of creating one here,
+// since multiple NES subsystems need to access the same MMU instance.
+func newCpu(mmu *mmu) *cpu {
+	cpu := &cpu{}
+	cpu.mmu = mmu
+	cpu.regs = newRegs()
+	return cpu
 }
