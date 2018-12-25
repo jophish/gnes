@@ -95,9 +95,13 @@ type Emulator struct {
 	info *cartInfo
 }
 
-func NewEmulator() (*Emulator, error) {
+func NewEmulator(path string) (*Emulator, error) {
 	emu := &Emulator{}
 	emu.info = newCartInfo()
+	err := emu.loadRom(path)
+	if err != nil {
+		return nil, err
+	}
 	return emu, nil
 }
 
@@ -109,7 +113,7 @@ func newCartInfo() *cartInfo {
 
 // Given a path to an iNES or NES2 format ROM,
 // loads the ROM such that emulation is ready to begin
-func (emu *Emulator) LoadRom(path string) error {
+func (emu *Emulator) loadRom(path string) error {
 	var err error
 	rom, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -122,7 +126,7 @@ func (emu *Emulator) LoadRom(path string) error {
 
 	// We can only initialize the mmu once we know which
 	// mapper we need to use
-	mmu, err := newMmu(emu.info.mapper)
+	mmu, err := newMmu(emu.info.mapper, emu.info)
 	if err != nil {
 		return err
 	}

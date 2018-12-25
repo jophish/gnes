@@ -1,12 +1,12 @@
 package gnes
 
-var mapperMap = map[uint32]func() mapper{
+var mapperMap = map[uint32]func(*cartInfo) mapper{
 	1: newMapper_MMC1,
 }
 
-func numberToMapper(mapper uint32) (mapper, error) {
+func numberToMapper(mapper uint32, info *cartInfo) (mapper, error) {
 	if mapFunc, ok := mapperMap[mapper]; ok {
-		return mapFunc(), nil
+		return mapFunc(info), nil
 	} else {
 		return nil, err_MAPPER_UNSUPPORTED
 	}
