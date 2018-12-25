@@ -20,11 +20,11 @@ type mapper_MMC1 struct {
 	prgRom [][]byte
 }
 
-func (*mapper_MMC1) write(val, addr uint8) error {
+func (*mapper_MMC1) write(val uint8, addr uint16) error {
 	return nil
 }
 
-func (*mapper_MMC1) read(addr uint8) (uint8, error) {
+func (*mapper_MMC1) read(addr uint16) (uint8, error) {
 	return 0, nil
 }
 

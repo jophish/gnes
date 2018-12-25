@@ -32,6 +32,16 @@ const (
 	PPUDATA_ADDR   = 0x2007
 )
 
+const (
+	REGION_INTERNAL_RAM        = 1
+	REGION_INTERNAL_RAM_MIRROR = 2
+	REGION_PPU_REG             = 3
+	REGION_PPU_REG_MIRROR      = 4
+	REGION_APU_IO_REG          = 5
+	REGION_APU_IO_TEST         = 6
+	REGION_CART_SPACE          = 7
+)
+
 // ppuRegisters represnts the registers from PPU_REG_ADDR to PPU_REG_MIRROR
 type ppuRegisters struct {
 	ppuctrl,
@@ -47,6 +57,8 @@ type ppuRegisters struct {
 type apuRegisters struct {
 }
 
+// mmu contains all memory accessible to all subsystems of the NES, and is the sole
+// interface through which subsystems read and write memory.
 type mmu struct {
 	mapper  mapper
 	ram     [INTERNAL_RAM_SIZE]byte
@@ -65,10 +77,30 @@ func newMmu(mapperNum uint32, info *cartInfo) (*mmu, error) {
 	return mmu, nil
 }
 
-func (*mmu) read(addr uint8) (uint8, error) {
+func (*mmu) read(addr uint16) (uint8, error) {
 	return 0, nil
 }
 
-func (*mmu) write(val, addr uint8) error {
+func (*mmu) write(val uint8, addr uint16) error {
 	return nil
+}
+
+func getAddrRegion(addr uint16) (int, error) {
+	if INTERNAL_RAM_ADDR <= addr && addr < INTERNAL_RAM_MIRROR_ADDR {
+		return REGION_INTERNAL_RAM, nil
+	} else if INTERNAL_RAM_MIRROR_ADDR <= addr && addr < PPU_REG_ADDR {
+		return REGION_INTERNAL_RAM_MIRROR, nil
+	} else if PPU_REG_ADDR <= addr && addr < PPU_REG_MIRROR_ADDR {
+		return REGION_PPU_REG, nil
+	} else if PPU_REG_MIRROR_ADDR <= addr && addr < APU_IO_REG_ADDR {
+		return REGION_PPU_REG_MIRROR, nil
+	} else if APU_IO_REG_ADDR <= addr && addr < APU_IO_TEST_ADDR {
+		return REGION_APU_IO_REG, nil
+	} else if APU_IO_TEST_ADDR <= addr && addr < CART_SPACE_ADDR {
+		return REGION_APU_IO_TEST, nil
+	} else if CART_SPACE_ADDR <= addr {
+		return REGION_CART_SPACE, nil
+	} else {
+		return 0, err_ADDR_OUT_OF_BOUNDS
+	}
 }
