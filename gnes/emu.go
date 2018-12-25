@@ -93,9 +93,17 @@ type cartInfo struct {
 // main emulator struct
 type Emulator struct {
 	cpu  *cpu
+	mmu  *mmu
 	info *cartInfo
 }
 
+func (emu *Emulator) ReadCpu(addr uint16) (uint8, error) {
+	val, err := emu.mmu.read(addr)
+	if err != nil {
+		return 0, err
+	}
+	return val, nil
+}
 func NewEmulator(path string) (*Emulator, error) {
 	emu := &Emulator{}
 	emu.info = newCartInfo()
@@ -131,6 +139,7 @@ func (emu *Emulator) loadRom(path string) error {
 	if err != nil {
 		return err
 	}
+	emu.mmu = mmu
 	emu.cpu = newCpu(mmu)
 
 	return nil
