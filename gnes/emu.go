@@ -16,6 +16,7 @@ const (
 	CHR_ROM_SIZE = 8192
 	PC_ROM_SIZE  = 8192
 	PC_PROM_SIZE = 32
+	PRG_RAM_SIZE = 8192
 )
 
 // system type enum
