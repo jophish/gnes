@@ -12,7 +12,7 @@ func numberToMapper(mapper uint32, info *cartInfo) (mapper, error) {
 		}
 		return newMapper, nil
 	} else {
-		return nil, err_MAPPER_UNSUPPORTED
+		return nil, &gError1{err_MAPPER_UNSUPPORTED, uint64(mapper)}
 	}
 }
 

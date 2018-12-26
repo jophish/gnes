@@ -140,8 +140,21 @@ func (emu *Emulator) loadRom(path string) error {
 		return err
 	}
 	emu.mmu = mmu
-	emu.cpu = newCpu(mmu)
+	cpu, err := newCpu(mmu)
+	if err != nil {
+		return err
+	}
+	emu.cpu = cpu
+	return nil
+}
 
+// Step is the main way for external callers to step through emulation. This takes care
+// of fetching and executing opcodes/instructions, updating APU and PPU appropriately, etc.
+func (emu *Emulator) Step() error {
+	err := emu.cpu.stepInstruction()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -151,7 +164,7 @@ func (info *cartInfo) loadCartInfo(rom []byte) error {
 	// Check that the header magic constant is correct
 	nesConstant := []byte{0x4e, 0x45, 0x53, 0x1a}
 	if !bytes.Equal(rom[0:4], nesConstant) {
-		return err_BAD_MAGIC_CONSTANT
+		return &gError{err_BAD_MAGIC_CONSTANT}
 	}
 
 	// Check if it's iNES or NES 2.0
@@ -195,10 +208,10 @@ func (info *cartInfo) loadINESData(rom []byte) error {
 	nes2 := (rom[7] & NES2_MASK) == NES2_FLAG
 	zeroBytes := bytes.Equal(rom[11:15], []byte{0, 0, 0, 0})
 	if nes2 {
-		return err_BAD_INES_HEADER
+		return &gError{err_BAD_INES_HEADER}
 	}
 	if !zeroBytes {
-		return err_NONZERO_INES_HEADER_BUFFER
+		return &gError{err_NONZERO_INES_HEADER_BUFFER}
 	}
 	// Get data that's common to both iNES and NES2.0
 	if err := info.loadCommonData(rom); err != nil {

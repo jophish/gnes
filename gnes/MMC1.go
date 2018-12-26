@@ -31,7 +31,7 @@ type mapper_MMC1 struct {
 }
 
 func (*mapper_MMC1) write(val uint8, addr uint16) error {
-	return err_ADDR_OUT_OF_BOUNDS
+	return &gError{err_ADDR_OUT_OF_BOUNDS}
 }
 
 func (mmu *mapper_MMC1) read(addr uint16) (uint8, error) {
@@ -48,7 +48,7 @@ func (mmu *mapper_MMC1) read(addr uint16) (uint8, error) {
 	case region_PRG_ROM2:
 		return mmu.prgRom[mmu.romBank2][addr-addr_PRG_ROM2], nil
 	}
-	return 0, err_ADDR_OUT_OF_BOUNDS
+	return 0, &gError{errType: err_ADDR_OUT_OF_BOUNDS}
 }
 
 func (*mapper_MMC1) addrToRegion(addr uint16) (int, error) {
@@ -59,7 +59,7 @@ func (*mapper_MMC1) addrToRegion(addr uint16) (int, error) {
 	} else if addr_PRG_ROM2 <= addr {
 		return region_PRG_ROM2, nil
 	} else {
-		return 0, err_ADDR_OUT_OF_BOUNDS
+		return 0, &gError{err_ADDR_OUT_OF_BOUNDS}
 	}
 
 }
@@ -67,7 +67,7 @@ func newMapper_MMC1(info *cartInfo) (mapper, error) {
 	mapper := &mapper_MMC1{}
 
 	if uint32(len(info.data.prgRom))/PRG_ROM_SIZE != info.prgRomSize {
-		return nil, err_INCONSISTENT_PRG_ROM_SIZE
+		return nil, &gError{err_INCONSISTENT_PRG_ROM_SIZE}
 	}
 	mapper.prgRomSize = info.prgRomSize
 	mapper.prgRom = make([][]byte, mapper.prgRomSize)
@@ -80,7 +80,7 @@ func newMapper_MMC1(info *cartInfo) (mapper, error) {
 	mapper.romBank2 = int(mapper.prgRomSize) - 1
 
 	if info.prgRamSize > 1 {
-		return nil, err_INCONSISTENT_PRG_RAM_SIZE
+		return nil, &gError{err_INCONSISTENT_PRG_RAM_SIZE}
 	}
 	mapper.prgRam = make([]byte, info.prgRamSize*PRG_RAM_SIZE)
 	mapper.prgRamSize = info.prgRamSize

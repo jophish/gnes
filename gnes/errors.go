@@ -2,19 +2,65 @@ package gnes
 
 import "fmt"
 
-var err_BAD_INES_HEADER = &gError{1, "ROM does not have iNES flag set"}
-var err_NONZERO_INES_HEADER_BUFFER = &gError{2, "iNES ROM has nonzero header buffer"}
-var err_BAD_MAGIC_CONSTANT = &gError{3, "ROM does not contain valid iNES file format magic constant"}
-var err_MAPPER_UNSUPPORTED = &gError{4, "Mapper is currently unsupported"}
-var err_INCONSISTENT_PRG_ROM_SIZE = &gError{5, "Cartridge does not contain amount of PRG ROM specified in header"}
-var err_INCONSISTENT_PRG_RAM_SIZE = &gError{6, "Cartridge specifies inconsistent amount of PRG RAM for mapper type"}
-var err_ADDR_OUT_OF_BOUNDS = &gError{7, "Address out of bounds "}
+const (
+	err_BAD_INES_HEADER            = 1
+	err_NONZERO_INES_HEADER_BUFFER = 2
+	err_BAD_MAGIC_CONSTANT         = 3
+	err_MAPPER_UNSUPPORTED         = 4
+	err_INCONSISTENT_PRG_ROM_SIZE  = 5
+	err_INCONSISTENT_PRG_RAM_SIZE  = 6
+	err_ADDR_OUT_OF_BOUNDS         = 7
+	err_UNSUPPORTED_OPCODE         = 8
+	err_UNIMPLEMENTED_OPCODE       = 9
+)
+
+var errToString = map[int]string{
+	err_BAD_INES_HEADER:            "ROM does not have iNES flag set",
+	err_NONZERO_INES_HEADER_BUFFER: "iNES ROM has nonzero header buffer",
+	err_BAD_MAGIC_CONSTANT:         "ROM does not contain valid iNES file format magic constant",
+	err_MAPPER_UNSUPPORTED:         "Mapper %d is currently unsupported",
+	err_INCONSISTENT_PRG_ROM_SIZE:  "Cartridge does not contain amount of PRG ROM specified in header",
+	err_INCONSISTENT_PRG_RAM_SIZE:  "Cartridge specifies inconsistent amount of PRG RAM for mapper type",
+	err_ADDR_OUT_OF_BOUNDS:         "Address out of bounds",
+	err_UNSUPPORTED_OPCODE:         "Unsupported opcode %x at address %#x",
+	err_UNIMPLEMENTED_OPCODE:       "Opcode unimplemented",
+}
 
 type gError struct {
-	errType uint64
-	info    string
+	errType int
+}
+
+func gErrorNew(errType int) *gError {
+	return &gError{errType}
 }
 
 func (e *gError) Error() string {
-	return fmt.Sprintf("%s", e.info)
+	return fmt.Sprintf(errToString[e.errType])
+}
+
+type gError1 struct {
+	errType int
+	val1    uint64
+}
+
+func gError1New(errType int, val1 uint64) *gError1 {
+	return &gError1{errType, val1}
+}
+
+func (e *gError1) Error() string {
+	return fmt.Sprintf(errToString[e.errType], e.val1)
+}
+
+type gError2 struct {
+	errType int
+	val1,
+	val2 uint64
+}
+
+func gError2New(errType int, val1, val2 uint64) *gError2 {
+	return &gError2{errType, val1, val2}
+}
+
+func (e *gError2) Error() string {
+	return fmt.Sprintf(errToString[e.errType], e.val1, e.val2)
 }

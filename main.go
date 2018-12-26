@@ -9,16 +9,9 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	for i := 0; i < 10; i++ {
-		addr := uint16(0xffd8 + i)
-		val, err := emu.ReadCpu(addr)
-		if err != nil {
-			fmt.Printf("%#x \n", addr)
-			fmt.Println(err)
-		} else {
-			fmt.Printf("%#x: %#x\n", addr, val)
-		}
-
+	err = emu.Step()
+	if err != nil {
+		fmt.Println(err)
 	}
 
 }

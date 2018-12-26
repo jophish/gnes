@@ -1,6 +1,10 @@
 package gnes
 
 const (
+	vector_RESET_HI = 0xFFFD
+	vector_RESET_LO = 0xFFFC
+)
+const (
 	INTERNAL_RAM_SIZE        = 0x800
 	INTERNAL_RAM_MIRROR_SIZE = 0x1800
 	PPU_REG_SIZE             = 0x8
@@ -99,7 +103,7 @@ func (mmu *mmu) read(addr uint16) (uint8, error) {
 			return 0, err
 		}
 	default:
-		return 0, err_ADDR_OUT_OF_BOUNDS
+		return 0, &gError{err_ADDR_OUT_OF_BOUNDS}
 	}
 
 	return val, nil
@@ -125,6 +129,6 @@ func getAddrRegion(addr uint16) (int, error) {
 	} else if CART_SPACE_ADDR <= addr {
 		return REGION_CART_SPACE, nil
 	} else {
-		return 0, err_ADDR_OUT_OF_BOUNDS
+		return 0, &gError{err_ADDR_OUT_OF_BOUNDS}
 	}
 }
