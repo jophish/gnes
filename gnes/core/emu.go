@@ -2,7 +2,8 @@ package gnes
 
 import "io/ioutil"
 import "bytes"
-import "fmt"
+
+//import "fmt"
 
 // file format section address enum
 const (
@@ -177,7 +178,7 @@ func (info *cartInfo) loadCartInfo(rom []byte) error {
 		if err := info.loadINESData(rom); err != nil {
 			return err
 		}
-		fmt.Printf("%+v\n", *info)
+		//fmt.Printf("%+v\n", *info)
 	}
 	if err != nil {
 		return err

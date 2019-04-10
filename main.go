@@ -1,17 +1,7 @@
 package main
 
-import "./gnes"
-import "fmt"
+import "./gnes/lib"
 
 func main() {
-	var err error
-	emu, err := gnes.NewEmulator("roms/cpu.nes")
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = emu.Step()
-	if err != nil {
-		fmt.Println(err)
-	}
-
+	gneslib.RunCLIDebugger("roms/cpu.nes")
 }
