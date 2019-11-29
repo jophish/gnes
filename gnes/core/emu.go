@@ -246,3 +246,19 @@ func (info *cartInfo) loadINESData(rom []byte) error {
 
 	return nil
 }
+
+/***********************************************/
+/*                   Getters                   */
+/***********************************************/
+
+func (emu *Emulator) GetPC() uint16 {
+	return emu.cpu.getPC()
+}
+
+func (emu *Emulator) ReadAddr(addr uint16) (uint8, error) {
+	return emu.mmu.read(addr)
+}
+
+func (emu *Emulator) GetCPUState() *Registers {
+	return emu.cpu.newPublicRegs()
+}

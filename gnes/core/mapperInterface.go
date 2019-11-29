@@ -19,4 +19,5 @@ func numberToMapper(mapper uint32, info *cartInfo) (mapper, error) {
 type mapper interface {
 	write(val uint8, addr uint16) error
 	read(addr uint16) (uint8, error)
+	getAddrPointer(addr uint16) (*uint8, error)
 }

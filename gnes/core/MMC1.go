@@ -35,20 +35,28 @@ func (*mapper_MMC1) write(val uint8, addr uint16) error {
 }
 
 func (mmu *mapper_MMC1) read(addr uint16) (uint8, error) {
-	region, err := mmu.addrToRegion(addr)
+	ptr, err := mmu.getAddrPointer(addr)
 	if err != nil {
 		return 0, err
+	}
+	return *ptr, nil
+}
+
+func (mmu *mapper_MMC1) getAddrPointer(addr uint16) (*uint8, error) {
+	region, err := mmu.addrToRegion(addr)
+	if err != nil {
+		return nil, err
 	}
 
 	switch region {
 	case region_PRG_RAM:
-		return mmu.prgRam[addr-addr_PRG_RAM], nil
+		return &mmu.prgRam[addr-addr_PRG_RAM], nil
 	case region_PRG_ROM1:
-		return mmu.prgRom[mmu.romBank1][addr-addr_PRG_ROM1], nil
+		return &mmu.prgRom[mmu.romBank1][addr-addr_PRG_ROM1], nil
 	case region_PRG_ROM2:
-		return mmu.prgRom[mmu.romBank2][addr-addr_PRG_ROM2], nil
+		return &mmu.prgRom[mmu.romBank2][addr-addr_PRG_ROM2], nil
 	}
-	return 0, &gError{errType: err_ADDR_OUT_OF_BOUNDS}
+	return nil, &gError{errType: err_ADDR_OUT_OF_BOUNDS}
 }
 
 func (*mapper_MMC1) addrToRegion(addr uint16) (int, error) {

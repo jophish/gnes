@@ -81,31 +81,52 @@ func newMmu(mapperNum uint32, info *cartInfo) (*mmu, error) {
 	return mmu, nil
 }
 
-func (mmu *mmu) read(addr uint16) (uint8, error) {
+func (mmu *mmu) getAddrPointer(addr uint16) (*uint8, error) {
 	region, err := getAddrRegion(addr)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	var val uint8
+	var ptr *uint8
 	switch region {
 	case REGION_INTERNAL_RAM:
-		val = mmu.ram[addr]
+		ptr = &mmu.ram[addr]
 	case REGION_INTERNAL_RAM_MIRROR:
-		val = mmu.ram[addr%INTERNAL_RAM_SIZE]
+		ptr = &mmu.ram[addr%INTERNAL_RAM_SIZE]
 	//case REGION_PPU_REG:
 	//case REGION_PPU_REG_MIRROR:
 	//case REGION_APU_IO_REG:
 	//case REGION_APU_IO_TEST:
 	case REGION_CART_SPACE:
-		val, err = mmu.mapper.read(addr)
+		ptr, err = mmu.mapper.getAddrPointer(addr)
 		if err != nil {
-			return 0, err
+			return nil, err
 		}
 	default:
-		return 0, &gError{err_ADDR_OUT_OF_BOUNDS}
+		return nil, &gError{err_ADDR_OUT_OF_BOUNDS}
 	}
 
+	return ptr, nil
+}
+
+func (mmu *mmu) read(addr uint16) (uint8, error) {
+	ptr, err := mmu.getAddrPointer(addr)
+	if err != nil {
+		return 0, err
+	}
+	return *ptr, nil
+}
+
+func (mmu *mmu) read16(addr uint16) (uint16, error) {
+	lowByte, err := mmu.read(addr)
+	if err != nil {
+		return 0, err
+	}
+	highByte, err := mmu.read(addr + 1)
+	if err != nil {
+		return 0, err
+	}
+	val := (uint16(highByte) << 8) & uint16(lowByte)
 	return val, nil
 }
 
