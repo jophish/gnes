@@ -333,10 +333,16 @@ func (cpu *cpu) op_LD() error {
 
 	if val == 0 {
 		cpu.regs.z = true
+	} else {
+		cpu.regs.z = false
 	}
+
 	if (val & 0x80) != 0 {
 		cpu.regs.n = true
+	} else {
+		cpu.regs.n = false
 	}
+
 	cpu.cycles += cycles + pgCross
 	*dst = val
 	return nil
