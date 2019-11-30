@@ -371,5 +371,9 @@ func (cpu *cpu) op_BRK() error {
 }
 
 func (cpu *cpu) z() error {
-	return &gError{err_UNIMPLEMENTED_OPCODE}
+	op, err := cpu.getCurrentOp()
+	if err != nil {
+		return nil
+	}
+	return gError2New(err_UNSUPPORTED_OPCODE, uint64(op), uint64(cpu.regs.pc))
 }
