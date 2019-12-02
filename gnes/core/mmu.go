@@ -126,12 +126,30 @@ func (mmu *mmu) read16(addr uint16) (uint16, error) {
 	if err != nil {
 		return 0, err
 	}
-	val := (uint16(highByte) << 8) & uint16(lowByte)
+	val := (uint16(highByte) << 8) | uint16(lowByte)
 	return val, nil
 }
 
 func (mmu *mmu) write(val uint8, addr uint16) error {
-	return nil
+	region, err := getAddrRegion(addr)
+	if err != nil {
+		return err
+	}
+	switch region {
+	case REGION_INTERNAL_RAM:
+		mmu.ram[addr] = val
+	case REGION_INTERNAL_RAM_MIRROR:
+		mmu.ram[addr%INTERNAL_RAM_SIZE] = val
+	//case REGION_PPU_REG:
+	//case REGION_PPU_REG_MIRROR:
+	//case REGION_APU_IO_REG:
+	//case REGION_APU_IO_TEST:
+	case REGION_CART_SPACE:
+		err = mmu.mapper.write(val, addr)
+	default:
+		err = &gError{err_ADDR_OUT_OF_BOUNDS}
+	}
+	return err
 }
 
 func getAddrRegion(addr uint16) (int, error) {

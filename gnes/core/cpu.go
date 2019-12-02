@@ -234,30 +234,32 @@ func (cpu *cpu) getSourceValue() (uint8, uint64, error) {
 	return val, pgCross, err
 }
 
-// getDestiationPointer returns a pointer to the memory destination
-// that the opcode referenced by the current PC should write to.
-func (cpu *cpu) getDestinationPointer() (*uint8, error) {
-	addr := cpu.regs.pc
-	op, err := cpu.mmu.read(addr)
+// writeToDestination writes val to the location specified by the
+// current LD ot ST opcode.
+func (cpu *cpu) writeToDestination(val uint8) error {
+	op, err := cpu.getCurrentOp()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var dst *uint8
+	var imAddr uint16
 
 	switch opDst[op] {
 	case loc_A:
-		dst = &cpu.regs.a
+		cpu.regs.a = val
 	case loc_ABS:
-		imAddr, err := cpu.mmu.read16(addr + 1)
+		imAddr, err = cpu.mmu.read16(cpu.regs.pc + 1)
 		if err != nil {
 			break
 		}
-		dst, err = cpu.mmu.getAddrPointer(imAddr)
+		err = cpu.mmu.write(val, imAddr)
+		if err != nil {
+			break
+		}
 	default:
 		err = errors.New("Invalid destination location")
 	}
-	return dst, err
+	return err
 }
 
 // getCurrentOp returns the opcode at the current PC. This is
@@ -318,14 +320,17 @@ func (cpu *cpu) op_LD() error {
 	if err != nil {
 		return err
 	}
-	dst, err := cpu.getDestinationPointer()
-	if err != nil {
-		return err
-	}
+
 	cycles, err := cpu.getOpCycles()
 	if err != nil {
 		return err
 	}
+
+	err = cpu.writeToDestination(val)
+	if err != nil {
+		return err
+	}
+
 	err = cpu.incrementPC()
 	if err != nil {
 		return err
@@ -344,7 +349,7 @@ func (cpu *cpu) op_LD() error {
 	}
 
 	cpu.cycles += cycles + pgCross
-	*dst = val
+
 	return nil
 }
 
@@ -354,21 +359,24 @@ func (cpu *cpu) op_ST() error {
 	if err != nil {
 		return err
 	}
-	dst, err := cpu.getDestinationPointer()
-	if err != nil {
-		return err
-	}
+
 	cycles, err := cpu.getOpCycles()
 	if err != nil {
 		return err
 	}
+
+	err = cpu.writeToDestination(val)
+	if err != nil {
+		return err
+	}
+
 	err = cpu.incrementPC()
 	if err != nil {
 		return err
 	}
 
 	cpu.cycles += cycles
-	*dst = val
+
 	return nil
 }
 
