@@ -58,14 +58,20 @@ func (dbg *debugger) createCmdMap() error {
 	dbg.cmdFuncMap[dbg.quitCmd] = cmdQuit
 	dbg.cmdHelpMap[dbg.quitCmd] = "Quit the debugger"
 
-	dbg.cmdFuncMap["si"] = cmdStepInstruction
-	dbg.cmdHelpMap["si"] = "Step a single instruction"
+	dbg.cmdFuncMap["s"] = cmdStepInstruction
+	dbg.cmdHelpMap["s"] = "Step a single instruction"
 
 	dbg.cmdFuncMap["rs"] = cmdReadAddress
 	dbg.cmdHelpMap["rs"] = "Read single memory address 'addr' (rs addr)"
 
 	dbg.cmdFuncMap["rn"] = cmdReadN
 	dbg.cmdHelpMap["rn"] = "Read n memory addresses starting from 'addr' (rn addr n)"
+
+	dbg.cmdFuncMap["ris"] = cmdReadInstructionAddress
+	dbg.cmdHelpMap["ris"] = "Read single memory address 'addr' as instruction (rs addr)"
+
+	dbg.cmdFuncMap["rin"] = cmdReadNInstructions
+	dbg.cmdHelpMap["rin"] = "Read n memory addresses as instructions starting from 'addr' (rn addr n)"
 
 	dbg.cmdFuncMap["r"] = cmdShowRegisters
 	dbg.cmdHelpMap["r"] = "Show contents of internal CPU regsiters"
@@ -130,6 +136,54 @@ func cmdQuit(dbg *debugger, input string) error {
 func cmdStepInstruction(dbg *debugger, input string) error {
 	err := dbg.emu.Step()
 	return err
+}
+
+func cmdReadInstructionAddress(dbg *debugger, input string) error {
+	args := getArgs(input)
+	if len(args) != 1 {
+		return errors.New("Command requires single hexadecimal argument")
+	}
+	addr, err := strconv.ParseUint(args[0], 16, 16)
+	if err != nil {
+		return errors.New("Command requires single hexadecimal argument")
+	}
+	val, err := dbg.emu.GetOpMnemonic(uint16(addr))
+	if err != nil {
+		return err
+	}
+	fmt.Printf("    [%#04x]: %s\n", addr, val)
+	return nil
+}
+
+func cmdReadNInstructions(dbg *debugger, input string) error {
+	args := getArgs(input)
+	if len(args) != 2 {
+		return errors.New("Command requires hex, int args")
+	}
+	addr, err := strconv.ParseUint(args[0], 16, 16)
+	if err != nil {
+		return errors.New("First argument must be hexadecimal")
+	}
+
+	numAddr, err := strconv.ParseUint(args[1], 10, 16)
+	if err != nil {
+		return errors.New("Second argument must be integer")
+	}
+
+	var i uint64
+	for i = 0; i < numAddr; i++ {
+		val, err := dbg.emu.GetOpMnemonic(uint16(addr))
+		if err != nil {
+			return err
+		}
+		fmt.Printf("    [%#04x]: %s\n", addr, val)
+		opLength, err := dbg.emu.GetOpLength(uint16(addr))
+		if err != nil {
+			return err
+		}
+		addr += uint64(opLength)
+	}
+	return nil
 }
 
 func cmdReadAddress(dbg *debugger, input string) error {

@@ -262,3 +262,11 @@ func (emu *Emulator) ReadAddr(addr uint16) (uint8, error) {
 func (emu *Emulator) GetCPUState() *Registers {
 	return emu.cpu.newPublicRegs()
 }
+
+func (emu *Emulator) GetOpMnemonic(addr uint16) (string, error) {
+	return emu.cpu.getOpMnemonic(addr)
+}
+
+func (emu *Emulator) GetOpLength(addr uint16) (uint16, error) {
+	return emu.cpu.getOpLengthAddr(addr)
+}

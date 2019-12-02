@@ -1,6 +1,7 @@
 package gnes
 
 import "errors"
+import "fmt"
 
 const (
 	mode_IM     = 0
@@ -31,6 +32,26 @@ const (
 	loc_X      = 11
 	loc_Y      = 12
 )
+
+var opText = []string{
+	// 0   1    2     3     4     5    6      7     8     9     a     b     c     d     e      f
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 0
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 1
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 2
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 3
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 4
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 5
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 6
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 7
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "STA", "NA", "NA", // 8
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 9
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "LDA", "NA", "NA", "NA", "NA", "NA", "NA", // a
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // b
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // c
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // d
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // e
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // f
+}
 
 var opArray = []func(*cpu) error{
 	//  0     1         2         3         4         5         6         7         8         9         a         b         c         d         e         f
@@ -208,6 +229,38 @@ func (cpu *cpu) stepInstruction() error {
 	return nil
 }
 
+// getOpMnemonic returns the dissasembly of the opcode at address addr.
+func (cpu *cpu) getOpMnemonic(addr uint16) (string, error) {
+	op, err := cpu.mmu.read(addr)
+	if err != nil {
+		return "", err
+	}
+
+	mnemonic := opText[op]
+	if mnemonic == "NA" {
+		return "", errors.New("Unknown opcode mnemonic")
+	}
+
+	mode := opMode[op]
+
+	switch mode {
+	case mode_IM:
+		val, err := cpu.mmu.read(addr + 1)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("%s #%02x", mnemonic, val), nil
+	case mode_ABS:
+		val, err := cpu.mmu.read16(addr + 1)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("%s %04x", mnemonic, val), nil
+	default:
+		return "", errors.New("Unknown op mode")
+	}
+}
+
 // getSourceValue gets the source value for the opcode referenced by
 // the current PC and returns it. For mode_ABS_X, mode_ABS_Y, and
 // mode_IND_Y opcodes, returns 1 if a page was crossed while retrieving
@@ -280,14 +333,8 @@ func (cpu *cpu) getOpCycles() (uint64, error) {
 	return opCycles[op], nil
 }
 
-// getOpLength returns the length of the opcode referenced
-// by the current PC, in bytes.
-func (cpu *cpu) getOpLength() (uint16, error) {
-	op, err := cpu.getCurrentOp()
-	if err != nil {
-		return 0, err
-	}
-
+// getOpLength returns the length of the opcode op.
+func (cpu *cpu) getOpLength(op uint8) (uint16, error) {
 	switch opMode[op] {
 	case mode_IM:
 		return 2, nil
@@ -296,13 +343,31 @@ func (cpu *cpu) getOpLength() (uint16, error) {
 	default:
 		return 0, errors.New("Invalid opcode length")
 	}
+}
 
+// getPCOpLength returns the length of the opcode referenced
+// by the current PC, in bytes.
+func (cpu *cpu) getPCOpLength() (uint16, error) {
+	op, err := cpu.getCurrentOp()
+	if err != nil {
+		return 0, err
+	}
+	return cpu.getOpLength(op)
+}
+
+// getOpLengthAddr returns the length of the opcode at address addr.
+func (cpu *cpu) getOpLengthAddr(addr uint16) (uint16, error) {
+	op, err := cpu.mmu.read(addr)
+	if err != nil {
+		return 0, err
+	}
+	return cpu.getOpLength(op)
 }
 
 // incrementPC increments the PC to the next opcode, i.e.,
 // by the number of bytes in the current opcode.
 func (cpu *cpu) incrementPC() error {
-	opLength, err := cpu.getOpLength()
+	opLength, err := cpu.getPCOpLength()
 	if err != nil {
 		return err
 	}
@@ -377,10 +442,6 @@ func (cpu *cpu) op_ST() error {
 
 	cpu.cycles += cycles
 
-	return nil
-}
-
-func (cpu *cpu) op_BRK() error {
 	return nil
 }
 
