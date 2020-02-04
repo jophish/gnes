@@ -50,7 +50,6 @@ const (
 	DONE_WRITE_MASK        = 0x1
 	DATA_BIT_MASK          = 0x1
 	DATA_MASK              = 0x1F
-	REG_SELECT_ADDR_MASK   = 0x6000
 	MIRRORING_MASK         = 0x3
 	PRG_ROM_BANK_MODE_MASK = 0xC
 	CHR_ROM_BANK_MODE_MASK = 0x10
@@ -88,9 +87,7 @@ func (mmu *mapper_MMC1) write(val uint8, addr uint16) error {
 				// If bit 0 of shift register is 1, this is the last bit of data, so update
 				// state and reset the shift register.
 
-				// This mask is not really necessary, but technically only bits 13 and 14 of
-				// address actually matter.
-				register, err := mmu.addrToRegister(addr & REG_SELECT_ADDR_MASK)
+				register, err := mmu.addrToRegister(addr)
 				if err != nil {
 					return err
 				}
@@ -118,7 +115,7 @@ func (mmu *mapper_MMC1) write(val uint8, addr uint16) error {
 
 			} else {
 				// otherwise, keep pushing data into shift reg
-				fmt.Println("New MMC1 shift register value: %#x", newVal)
+				fmt.Printf("New MMC1 shift register value: %0#8b\n", newVal)
 				mmu.shiftReg = newVal
 			}
 		}

@@ -16,6 +16,7 @@ const (
 	mode_NI     = 9 // not implemented
 	mode_IMP    = 10
 	mode_A      = 11
+	mode_REL    = 12
 )
 
 const (
@@ -32,6 +33,7 @@ const (
 	loc_NI     = 10
 	loc_X      = 11
 	loc_Y      = 12
+	loc_REL    = 13
 )
 
 var opText = []string{
@@ -48,8 +50,8 @@ var opText = []string{
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 9
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "LDA", "NA", "NA", "NA", "NA", "NA", "NA", // a
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // b
-	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // c
-	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // d
+	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "CMP", "NA", "NA", "NA", "NA", "NA", "NA", // c
+	"BNE", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // d
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // e
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // f
 }
@@ -68,8 +70,8 @@ var opArray = []func(*cpu) error{
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // 9
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_LD, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // a
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // b
-	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // c
-	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // d
+	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_CMP, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // c
+	(*cpu).op_BNE, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // d
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // e
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z} // f
 
@@ -87,8 +89,8 @@ var opMode = []int{
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // 9
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_IM, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // a
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // b
-	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // c
-	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // d
+	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_IM, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // c
+	mode_REL, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // d
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // e
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // f
 }
@@ -107,8 +109,8 @@ var opCycles = []uint64{
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, // 9
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // a
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // b
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // c
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // d
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, // c
+	2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // d
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // e
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // f
 }
@@ -127,8 +129,8 @@ var opSrc = []int{
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 9
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_IM, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // a
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // b
-	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // c
-	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // d
+	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_IM, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // c
+	loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // d
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // e
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // f
 }
@@ -147,8 +149,8 @@ var opDst = []int{
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 9
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_A, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // a
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // b
-	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // c
-	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // d
+	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // c
+	loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // d
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // e
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // f
 }
@@ -259,6 +261,12 @@ func (cpu *cpu) getOpMnemonic(addr uint16) (string, error) {
 		return fmt.Sprintf("%s %04x", mnemonic, val), nil
 	case mode_A:
 		return fmt.Sprintf("%s A", mnemonic), nil
+	case mode_REL:
+		val, err := cpu.mmu.read(addr + 1)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("%s *%d", mnemonic, int8(val)), nil
 	default:
 		return "", errors.New("Unknown op mode")
 	}
@@ -288,6 +296,33 @@ func (cpu *cpu) getSourceValue() (uint8, uint64, error) {
 	}
 
 	return val, pgCross, err
+}
+
+// getBranchAddress returns the address a current branch instruction
+// should branch to if the branch test succeeds. Since all branch
+// instructions use relative addressing, the relative offset will
+// be interpreted as a two's complement signed value. If a page boundary
+// would be crossed, the second return value is a 1, else 0.
+func (cpu *cpu) getBranchAddress() (uint16, uint64, error) {
+	addr := cpu.regs.pc
+	val, err := cpu.mmu.read(addr + 1)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	opLength, err := cpu.getPCOpLength()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	newPC := uint16(int16(cpu.regs.pc+opLength) + int16(int8(val)))
+
+	pageCrossed := 0
+	if (newPC & 0xF0) != (addr & 0xF0) {
+		pageCrossed = 1
+	}
+
+	return newPC, uint64(pageCrossed), nil
 }
 
 // writeToDestination writes val to the location specified by the
@@ -345,6 +380,8 @@ func (cpu *cpu) getOpLength(op uint8) (uint16, error) {
 		return 3, nil
 	case mode_A:
 		return 1, nil
+	case mode_REL:
+		return 2, nil
 	default:
 		return 0, errors.New("Invalid opcode length")
 	}
@@ -450,6 +487,7 @@ func (cpu *cpu) op_ST() error {
 	return nil
 }
 
+// op_LSR is responsible for all logical shift right operations
 func (cpu *cpu) op_LSR() error {
 	val, _, err := cpu.getSourceValue()
 	if err != nil {
@@ -489,6 +527,73 @@ func (cpu *cpu) op_LSR() error {
 
 	cpu.cycles += cycles
 
+	return nil
+}
+
+// op_CMP is responsible for all compare operations
+func (cpu *cpu) op_CMP() error {
+	val, _, err := cpu.getSourceValue()
+	if err != nil {
+		return err
+	}
+
+	acc := cpu.regs.a
+
+	cycles, err := cpu.getOpCycles()
+	if err != nil {
+		return err
+	}
+
+	err = cpu.incrementPC()
+	if err != nil {
+		return err
+	}
+
+	if acc == val {
+		cpu.regs.z = true
+	} else {
+		cpu.regs.z = false
+	}
+
+	if acc >= val {
+		cpu.regs.c = true
+	} else {
+		cpu.regs.c = false
+	}
+
+	if ((acc - val) & 0x80) != 0 {
+		cpu.regs.n = true
+	} else {
+		cpu.regs.n = false
+	}
+
+	cpu.cycles += cycles
+
+	return nil
+}
+
+// op_BNE is responsible for the branch not equal operation
+func (cpu *cpu) op_BNE() error {
+	newPC, pageCrossed, err := cpu.getBranchAddress()
+	if err != nil {
+		return err
+	}
+
+	cycles, err := cpu.getOpCycles()
+	if err != nil {
+		return err
+	}
+
+	if cpu.regs.z == false {
+		cpu.cycles += 1 + pageCrossed
+		cpu.regs.pc = newPC
+	} else {
+		cpu.cycles += cycles
+		err := cpu.incrementPC()
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

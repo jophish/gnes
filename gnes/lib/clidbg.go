@@ -61,6 +61,9 @@ func (dbg *debugger) createCmdMap() error {
 	dbg.cmdFuncMap["s"] = cmdStepInstruction
 	dbg.cmdHelpMap["s"] = "Step a single instruction"
 
+	dbg.cmdFuncMap["sn"] = cmdStepInstructions
+	dbg.cmdHelpMap["sn"] = "Step n instructions (sn n)"
+
 	dbg.cmdFuncMap["rs"] = cmdReadAddress
 	dbg.cmdHelpMap["rs"] = "Read single memory address 'addr' (rs addr)"
 
@@ -136,6 +139,26 @@ func cmdQuit(dbg *debugger, input string) error {
 func cmdStepInstruction(dbg *debugger, input string) error {
 	err := dbg.emu.Step()
 	return err
+}
+
+func cmdStepInstructions(dbg *debugger, input string) error {
+	args := getArgs(input)
+	if len(args) != 1 {
+		return errors.New("Command requires single integer argument")
+	}
+	numIns, err := strconv.ParseUint(args[0], 10, 16)
+	if err != nil {
+		return errors.New("Argument must be integer")
+	}
+
+	var i uint64
+	for i = 0; i < numIns; i++ {
+		err := dbg.emu.Step()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func cmdReadInstructionAddress(dbg *debugger, input string) error {
