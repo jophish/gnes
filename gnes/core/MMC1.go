@@ -207,6 +207,7 @@ func (*mapper_MMC1) addrToRegion(addr uint16) (int, error) {
 	}
 
 }
+
 func newMapper_MMC1(info *cartInfo) (mapper, error) {
 	mapper := &mapper_MMC1{}
 

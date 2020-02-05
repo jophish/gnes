@@ -1,6 +1,7 @@
 package gnes
 
 var mapperMap = map[uint32]func(*cartInfo) (mapper, error){
+	0: newMapper_NROM,
 	1: newMapper_MMC1,
 }
 
