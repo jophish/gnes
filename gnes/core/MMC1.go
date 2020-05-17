@@ -72,6 +72,7 @@ type mapper_MMC1 struct {
 	prgRamEnable bool
 
 	shiftReg uint8 // Internal shift register, used for holding temporary state
+	ppu      *ppu
 }
 
 func (mmu *mapper_MMC1) write(val uint8, addr uint16) error {
@@ -94,7 +95,9 @@ func (mmu *mapper_MMC1) write(val uint8, addr uint16) error {
 
 				switch register {
 				case region_REG_CONTROL:
+					fmt.Println("Updating control register (MMC1)")
 					prgRomMode, err := mmu.getPrgRomBankMode((newVal & PRG_ROM_BANK_MODE_MASK) >> 2)
+
 					if err != nil {
 						return err
 					}
@@ -106,7 +109,12 @@ func (mmu *mapper_MMC1) write(val uint8, addr uint16) error {
 						mmu.chrRomMode = CHR_ROM_MODE_4K
 					}
 
-					return errors.New("PPU unimplemented; cannot update mirroring state (MMC1)")
+					mirrorMode := newVal & MIRRORING_MASK
+					err = mmu.ppu.setMirroring(mirrorMode)
+					if err != nil {
+						return err
+					}
+
 				case region_REG_CHR_BANK0:
 
 				case region_REG_CHR_BANK1:
@@ -208,7 +216,7 @@ func (*mapper_MMC1) addrToRegion(addr uint16) (int, error) {
 
 }
 
-func newMapper_MMC1(info *cartInfo) (mapper, error) {
+func newMapper_MMC1(info *cartInfo, ppu *ppu) (mapper, error) {
 	mapper := &mapper_MMC1{}
 
 	if uint32(len(info.data.prgRom))/PRG_ROM_SIZE != info.prgRomSize {
@@ -236,5 +244,6 @@ func newMapper_MMC1(info *cartInfo) (mapper, error) {
 
 	mapper.shiftReg = 0
 
+	mapper.ppu = ppu
 	return mapper, nil
 }

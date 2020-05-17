@@ -68,11 +68,13 @@ type mmu struct {
 	ram     [INTERNAL_RAM_SIZE]byte
 	ppuRegs *ppuRegisters
 	apuRegs *apuRegisters
+	ppu     *ppu
 }
 
-func newMmu(mapperNum uint32, info *cartInfo) (*mmu, error) {
+func newMmu(mapperNum uint32, info *cartInfo, ppu *ppu) (*mmu, error) {
 	mmu := &mmu{}
-	mapper, err := numberToMapper(mapperNum, info)
+	mmu.ppu = ppu
+	mapper, err := numberToMapper(mapperNum, info, ppu)
 	if err != nil {
 		return nil, err
 	}
@@ -107,6 +109,7 @@ func (mmu *mmu) getAddrPointer(addr uint16) (*uint8, error) {
 	}
 
 	return ptr, nil
+
 }
 
 func (mmu *mmu) read(addr uint16) (uint8, error) {

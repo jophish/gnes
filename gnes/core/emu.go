@@ -95,6 +95,7 @@ type cartInfo struct {
 type Emulator struct {
 	cpu  *cpu
 	mmu  *mmu
+	ppu  *ppu
 	info *cartInfo
 }
 
@@ -134,9 +135,14 @@ func (emu *Emulator) loadRom(path string) error {
 		return err
 	}
 
+	ppu, err := newPpu()
+	if err != nil {
+		return err
+	}
+	emu.ppu = ppu
 	// We can only initialize the mmu once we know which
 	// mapper we need to use
-	mmu, err := newMmu(emu.info.mapper, emu.info)
+	mmu, err := newMmu(emu.info.mapper, emu.info, emu.ppu)
 	if err != nil {
 		return err
 	}
@@ -146,6 +152,7 @@ func (emu *Emulator) loadRom(path string) error {
 		return err
 	}
 	emu.cpu = cpu
+
 	return nil
 }
 

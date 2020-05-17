@@ -6,6 +6,7 @@ type mapper_NROM struct {
 	chrRom []byte
 
 	prgRomSize uint32
+	ppu        *ppu
 }
 
 func (mmu *mapper_NROM) write(val uint8, addr uint16) error {
@@ -20,7 +21,7 @@ func (mmu *mapper_NROM) getAddrPointer(addr uint16) (*uint8, error) {
 	return nil, nil
 }
 
-func newMapper_NROM(info *cartInfo) (mapper, error) {
+func newMapper_NROM(info *cartInfo, ppu *ppu) (mapper, error) {
 	mapper := &mapper_NROM{}
 
 	if uint32(len(info.data.prgRom))/PRG_ROM_SIZE != info.prgRomSize {
@@ -33,5 +34,6 @@ func newMapper_NROM(info *cartInfo) (mapper, error) {
 	for i := uint32(0); i < mapper.prgRomSize; i++ {
 		mapper.prgRom[i] = info.data.prgRom[i*PRG_ROM_SIZE : (i+1)*PRG_ROM_SIZE]
 	}
-
+	mapper.ppu = ppu
+	return nil, nil
 }
