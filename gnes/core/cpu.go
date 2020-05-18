@@ -51,7 +51,7 @@ var opText = []string{
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "LDA", "NA", "NA", "NA", "NA", "NA", "NA", // a
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // b
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "CMP", "NA", "NA", "NA", "NA", "NA", "NA", // c
-	"BNE", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // d
+	"BNE", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "CLD", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // d
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // e
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // f
 }
@@ -71,7 +71,7 @@ var opArray = []func(*cpu) error{
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_LD, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // a
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // b
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_CMP, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // c
-	(*cpu).op_BNE, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // d
+	(*cpu).op_BNE, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_CLD, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // d
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // e
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z} // f
 
@@ -90,7 +90,7 @@ var opMode = []int{
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_IM, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // a
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // b
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_IM, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // c
-	mode_REL, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // d
+	mode_REL, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_IMP, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // d
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // e
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // f
 }
@@ -110,7 +110,7 @@ var opCycles = []uint64{
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // a
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // b
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, // c
-	2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // d
+	2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, // d
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // e
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // f
 }
@@ -130,7 +130,7 @@ var opSrc = []int{
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_IM, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // a
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // b
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_IM, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // c
-	loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // d
+	loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // d
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // e
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // f
 }
@@ -150,7 +150,7 @@ var opDst = []int{
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_A, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // a
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // b
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // c
-	loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // d
+	loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // d
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // e
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // f
 }
@@ -449,6 +449,25 @@ func (cpu *cpu) incrementPC() error {
 /***********************************************/
 /*             Opcode Functions                */
 /***********************************************/
+
+// op_CLD clears the decimal mode flag
+func (cpu *cpu) op_CLD() error {
+	cycles, err := cpu.getOpCycles()
+	if err != nil {
+		return err
+	}
+
+	err = cpu.incrementPC()
+	if err != nil {
+		return err
+	}
+
+	cpu.cycles += cycles
+
+	cpu.regs.d = false
+
+	return nil
+}
 
 // op_SEI sets the interrupt disable flag
 func (cpu *cpu) op_SEI() error {
