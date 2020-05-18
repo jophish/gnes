@@ -21,7 +21,12 @@ type debugger struct {
 	quitCmd,
 	helpHint string
 
+	runN uint64
+
+	continueFlag,
 	runFlag bool
+
+	breakpoints []uint16
 }
 
 // Creates a new debugger containing an emulator with
@@ -33,6 +38,9 @@ func newDebugger(path string) (*debugger, error) {
 	dbg.quitCmd = "q"
 
 	dbg.runFlag = true
+	dbg.continueFlag = false
+
+	dbg.runN = 0
 
 	dbg.invalidCmdString = fmt.Sprintf("Invalid command. Enter '%s' for a list of valid commands.", dbg.helpCmd)
 
@@ -78,6 +86,18 @@ func (dbg *debugger) createCmdMap() error {
 
 	dbg.cmdFuncMap["r"] = cmdShowRegisters
 	dbg.cmdHelpMap["r"] = "Show contents of internal CPU regsiters"
+
+	dbg.cmdFuncMap["bp"] = setBreakpoint
+	dbg.cmdHelpMap["bp"] = "Add breakpoint at address 'addr' (bp addr)"
+
+	dbg.cmdFuncMap["sbp"] = showBreakpoints
+	dbg.cmdHelpMap["sbp"] = "Show all breakpoints"
+
+	dbg.cmdFuncMap["rbp"] = removeBreakpoint
+	dbg.cmdHelpMap["rbp"] = "Remove breakpoint at address 'addr' (rbp addr)"
+
+	dbg.cmdFuncMap["c"] = continueExecution
+	dbg.cmdHelpMap["c"] = "Continue execution until reaching a breakpoint"
 
 	return nil
 }
@@ -136,9 +156,73 @@ func cmdQuit(dbg *debugger, input string) error {
 	return nil
 }
 
+func continueExecution(dbg *debugger, input string) error {
+	dbg.continueFlag = true
+	return nil
+}
+
+func setBreakpoint(dbg *debugger, input string) error {
+	args := getArgs(input)
+	if len(args) != 1 {
+		return errors.New("Command requires single hexadecimal argument")
+	}
+	addr, err := strconv.ParseUint(args[0], 16, 16)
+	if err != nil {
+		return errors.New("Command requires single hexadecimal argument")
+	}
+
+	addr16 := uint16(addr)
+
+	for _, bp := range dbg.breakpoints {
+		if bp == addr16 {
+			return fmt.Errorf("Breakpoint already set for %#04x!", addr16)
+		}
+	}
+
+	dbg.breakpoints = append(dbg.breakpoints, addr16)
+	fmt.Printf("Breakpoint set for %#04x\n", addr16)
+	return nil
+}
+
+func showBreakpoints(dbg *debugger, input string) error {
+	if len(dbg.breakpoints) == 0 {
+		fmt.Println("No breakpoints set!")
+	} else {
+		fmt.Println("Breakpoints set for:")
+		for _, bp := range dbg.breakpoints {
+			fmt.Printf("    %#04x\n", bp)
+		}
+	}
+	return nil
+}
+
+func removeBreakpoint(dbg *debugger, input string) error {
+	args := getArgs(input)
+	if len(args) != 1 {
+		return errors.New("Command requires single hexadecimal argument")
+	}
+	addr, err := strconv.ParseUint(args[0], 16, 16)
+	if err != nil {
+		return errors.New("Command requires single hexadecimal argument")
+	}
+
+	addr16 := uint16(addr)
+
+	for i, bp := range dbg.breakpoints {
+		if bp == addr16 {
+			copy(dbg.breakpoints[i:], dbg.breakpoints[i+1:])
+			dbg.breakpoints[len(dbg.breakpoints)-1] = 0
+			dbg.breakpoints = dbg.breakpoints[:len(dbg.breakpoints)-1]
+			fmt.Printf("Removed breakpoint at %#04x\n", addr16)
+			return nil
+		}
+	}
+	return fmt.Errorf("No breakpoint was set at %#04x", addr16)
+}
+
 func cmdStepInstruction(dbg *debugger, input string) error {
-	err := dbg.emu.Step()
-	return err
+	dbg.runN = 1
+	return nil
 }
 
 func cmdStepInstructions(dbg *debugger, input string) error {
@@ -151,13 +235,7 @@ func cmdStepInstructions(dbg *debugger, input string) error {
 		return errors.New("Argument must be integer")
 	}
 
-	var i uint64
-	for i = 0; i < numIns; i++ {
-		err := dbg.emu.Step()
-		if err != nil {
-			return err
-		}
-	}
+	dbg.runN = numIns
 	return nil
 }
 
@@ -279,7 +357,52 @@ func (dbg *debugger) showPrompt() (string, error) {
 	return input, nil
 }
 
+// checkBreakpoint checks if the current execution has reached
+// a breakpoint. If so, a message is printed and any further
+// execution is halted.
+func (dbg *debugger) checkBreakpoint() {
+	pc := dbg.emu.GetPC()
+	for _, bp := range dbg.breakpoints {
+		if pc == bp {
+			dbg.runN = 0
+			dbg.continueFlag = false
+			fmt.Printf("Halted for breakpoint at %#04x\n", pc)
+		}
+	}
+}
+
+func (dbg *debugger) stepExecutionAndHaltOnError() error {
+	err := dbg.emu.Step()
+	if err != nil {
+		dbg.runN = 0
+		dbg.continueFlag = false
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
+
 func (dbg *debugger) showPromptAndDispatch() error {
+
+	if dbg.runN > 0 {
+		err := dbg.stepExecutionAndHaltOnError()
+		if err != nil {
+			return err
+		}
+		dbg.runN -= 1
+		dbg.checkBreakpoint()
+		return nil
+	}
+
+	if dbg.continueFlag {
+		err := dbg.stepExecutionAndHaltOnError()
+		if err != nil {
+			return err
+		}
+		dbg.checkBreakpoint()
+		return nil
+	}
+
 	input, err := dbg.showPrompt()
 	if err != nil {
 		return err

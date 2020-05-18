@@ -409,6 +409,8 @@ func (cpu *cpu) getOpLength(op uint8) (uint16, error) {
 		return 1, nil
 	case mode_REL:
 		return 2, nil
+	case mode_IMP:
+		return 1, nil
 	default:
 		return 0, errors.New("Invalid opcode length")
 	}
