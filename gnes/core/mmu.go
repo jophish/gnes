@@ -46,18 +46,6 @@ const (
 	REGION_CART_SPACE          = 7
 )
 
-// ppuRegisters represnts the registers from PPU_REG_ADDR to PPU_REG_MIRROR
-type ppuRegisters struct {
-	ppuctrl,
-	ppumask,
-	ppustatus,
-	oamaddr,
-	oamdata,
-	ppuscroll,
-	ppuaddr,
-	ppudata uint8
-}
-
 type apuRegisters struct {
 }
 
@@ -66,7 +54,6 @@ type apuRegisters struct {
 type mmu struct {
 	mapper  mapper
 	ram     [INTERNAL_RAM_SIZE]byte
-	ppuRegs *ppuRegisters
 	apuRegs *apuRegisters
 	ppu     *ppu
 }
@@ -79,7 +66,6 @@ func newMmu(mapperNum uint32, info *cartInfo, ppu *ppu) (*mmu, error) {
 		return nil, err
 	}
 	mmu.mapper = mapper
-	mmu.ppuRegs = &ppuRegisters{}
 	return mmu, nil
 }
 
@@ -97,6 +83,7 @@ func (mmu *mmu) getAddrPointer(addr uint16) (*uint8, error) {
 		ptr = &mmu.ram[addr%INTERNAL_RAM_SIZE]
 	//case REGION_PPU_REG:
 	//case REGION_PPU_REG_MIRROR:
+
 	//case REGION_APU_IO_REG:
 	//case REGION_APU_IO_TEST:
 	case REGION_CART_SPACE:
