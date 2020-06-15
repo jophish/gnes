@@ -81,9 +81,16 @@ func (mmu *mmu) getAddrPointer(addr uint16) (*uint8, error) {
 		ptr = &mmu.ram[addr]
 	case REGION_INTERNAL_RAM_MIRROR:
 		ptr = &mmu.ram[addr%INTERNAL_RAM_SIZE]
-	//case REGION_PPU_REG:
-	//case REGION_PPU_REG_MIRROR:
-
+	case REGION_PPU_REG:
+		ptr, err = mmu.ppu.getAddrPointer(addr)
+		if err != nil {
+			return nil, err
+		}
+	case REGION_PPU_REG_MIRROR:
+		ptr, err = mmu.ppu.getAddrPointer(addr)
+		if err != nil {
+			return nil, err
+		}
 	//case REGION_APU_IO_REG:
 	//case REGION_APU_IO_TEST:
 	case REGION_CART_SPACE:
@@ -130,8 +137,10 @@ func (mmu *mmu) write(val uint8, addr uint16) error {
 		mmu.ram[addr] = val
 	case REGION_INTERNAL_RAM_MIRROR:
 		mmu.ram[addr%INTERNAL_RAM_SIZE] = val
-	//case REGION_PPU_REG:
-	//case REGION_PPU_REG_MIRROR:
+	case REGION_PPU_REG:
+		err = mmu.ppu.write(val, addr)
+	case REGION_PPU_REG_MIRROR:
+		err = mmu.ppu.write(val, addr)
 	//case REGION_APU_IO_REG:
 	//case REGION_APU_IO_TEST:
 	case REGION_CART_SPACE:
