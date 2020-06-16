@@ -16,7 +16,7 @@ const (
 )
 
 // ppuRegisters represents the registers from PPU_REG_ADDR to PPU_REG_MIRROR
-type ppuReginsters struct {
+type ppuRegisters struct {
 	ppuctrl,
 	ppumask,
 	ppustatus,
