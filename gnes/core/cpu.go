@@ -5,6 +5,7 @@ import "fmt"
 
 const (
 	NEGATIVE_MASK = 0x80
+	BIT_6_MASK    = 0x40
 )
 
 const (
@@ -44,13 +45,13 @@ var opText = []string{
 	// 0   1    2     3     4     5    6      7     8     9     a     b     c     d     e      f
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 0
 	"BPL", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 1
-	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 2
+	"JSR", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "BIT", "NA", "NA", "NA", // 2
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 3
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "LSR", "NA", "JMP", "NA", "NA", "NA", // 4
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 5
-	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 6
+	"RTS", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 6
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "SEI", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // 7
-	"NA", "NA", "NA", "NA", "NA", "STA", "STX", "NA", "DEY", "NA", "NA", "NA", "NA", "STA", "NA", "NA", // 8
+	"NA", "NA", "NA", "NA", "NA", "STA", "STX", "NA", "DEY", "NA", "NA", "NA", "NA", "STA", "STX", "NA", // 8
 	"NA", "STA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "TXS", "NA", "NA", "NA", "NA", "NA", // 9
 	"NA", "NA", "LDX", "NA", "NA", "NA", "NA", "NA", "TAY", "LDA", "NA", "NA", "NA", "NA", "NA", "NA", // a
 	"NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", // b
@@ -64,13 +65,13 @@ var opArray = []func(*cpu) error{
 	//  0     1         2         3         4         5         6         7         8         9         a         b         c         d         e         f
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // 0
 	(*cpu).op_BPL, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // 1
-	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // 2
+	(*cpu).op_JSR, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_BIT, (*cpu).z, (*cpu).z, (*cpu).z, // 2
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // 3
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_LSR, (*cpu).z, (*cpu).op_JMP, (*cpu).z, (*cpu).z, (*cpu).z, // 4
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // 5
-	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // 6
+	(*cpu).op_RTS, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // 6
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_SEI, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // 7
-	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_ST, (*cpu).op_ST, (*cpu).z, (*cpu).op_DEC, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_ST, (*cpu).z, (*cpu).z, // 8
+	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_ST, (*cpu).op_ST, (*cpu).z, (*cpu).op_DEC, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_ST, (*cpu).op_ST, (*cpu).z, // 8
 	(*cpu).z, (*cpu).op_ST, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_TXS, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // 9
 	(*cpu).z, (*cpu).z, (*cpu).op_LD, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).op_TAY, (*cpu).op_LD, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // a
 	(*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, (*cpu).z, // b
@@ -83,13 +84,13 @@ var opMode = []int{
 	// 0     1        2        3        4        5        6        7        8        9        a        b        c        d        e        f
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // 0
 	mode_REL, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // 1
-	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // 2
+	mode_ABS, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_ABS, mode_NI, mode_NI, mode_NI, // 2
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // 3
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_A, mode_NI, mode_ABS, mode_NI, mode_NI, mode_NI, // 4
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // 5
-	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // 6
+	mode_IMP, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // 6
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_IMP, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // 7
-	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_ZERO, mode_ZERO, mode_NI, mode_IMP, mode_NI, mode_NI, mode_NI, mode_NI, mode_ABS, mode_NI, mode_NI, // 8
+	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_ZERO, mode_ZERO, mode_NI, mode_IMP, mode_NI, mode_NI, mode_NI, mode_NI, mode_ABS, mode_ABS, mode_NI, // 8
 	mode_NI, mode_IND_Y, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_IMP, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // 9
 	mode_NI, mode_NI, mode_IM, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_IMP, mode_IM, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // a
 	mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, mode_NI, // b
@@ -103,13 +104,13 @@ var opCycles = []uint64{
 	// 1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0
 	2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 1
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 2
+	6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, // 2
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 3
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 3, 0, 0, 0, // 4
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 5
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 6
+	6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 6
 	0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, // 7
-	0, 0, 0, 0, 0, 3, 3, 0, 2, 0, 0, 0, 0, 4, 0, 0, // 8
+	0, 0, 0, 0, 0, 3, 3, 0, 2, 0, 0, 0, 0, 4, 4, 0, // 8
 	0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, // 9
 	0, 0, 2, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, // a
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // b
@@ -123,13 +124,13 @@ var opSrc = []int{
 	// 0     1      2        3      4        5       6        7       8        9      a        b       c       d       e       f
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 0
 	loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 1
-	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 2
+	loc_ABS, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_ABS, loc_NI, loc_NI, loc_NI, // 2
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 3
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_A, loc_NI, loc_NA, loc_NI, loc_NI, loc_NI, // 4
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 5
-	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 6
+	loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 6
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 7
-	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_A, loc_X, loc_NI, loc_Y, loc_NI, loc_NI, loc_NI, loc_NI, loc_A, loc_NI, loc_NI, // 8
+	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_A, loc_X, loc_NI, loc_Y, loc_NI, loc_NI, loc_NI, loc_NI, loc_A, loc_X, loc_NI, // 8
 	loc_NI, loc_A, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 9
 	loc_NI, loc_NI, loc_IM, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NA, loc_IM, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // a
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // b
@@ -143,13 +144,13 @@ var opDst = []int{
 	// 0     1        2        3        4      5      6        7      8       9        a      b        c      d       e       f
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 0
 	loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 1
-	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 2
+	loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NA, loc_NI, loc_NI, loc_NI, // 2
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 3
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_A, loc_NI, loc_NA, loc_NI, loc_NI, loc_NI, // 4
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 5
-	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 6
+	loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 6
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 7
-	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_ZERO, loc_ZERO, loc_NI, loc_Y, loc_NI, loc_NI, loc_NI, loc_NI, loc_ABS, loc_NI, loc_NI, // 8
+	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_ZERO, loc_ZERO, loc_NI, loc_Y, loc_NI, loc_NI, loc_NI, loc_NI, loc_ABS, loc_ABS, loc_NI, // 8
 	loc_NI, loc_IND_Y, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NA, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // 9
 	loc_NI, loc_NI, loc_X, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_A, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // a
 	loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, loc_NI, // b
@@ -225,19 +226,22 @@ func (cpu *cpu) initPC() error {
 }
 
 // stepInstruction is the main method of progressing emulation. It
-// fetches the instruction at the current PC and executes it accordingly.
-func (cpu *cpu) stepInstruction() error {
+// fetches the instruction at the current PC and executes it accordingly,
+// and returns the number of cycles taken.
+func (cpu *cpu) stepInstruction() (uint64, error) {
+	previousCycles := cpu.cycles
 	addr := cpu.regs.pc
 	op, err := cpu.mmu.read(addr)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	opDispatcher := opArray[op]
 	err = opDispatcher(cpu)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	newCycles := cpu.cycles
+	return newCycles - previousCycles, nil
 }
 
 // getOpMnemonic returns the dissasembly of the opcode at address addr.
@@ -310,6 +314,15 @@ func (cpu *cpu) getSourceValue() (uint8, uint64, error) {
 	var pgCross uint64 = 1
 
 	switch opSrc[op] {
+	case loc_ABS:
+		absAddr, err := cpu.mmu.read16(addr + 1)
+		if err != nil {
+			break
+		}
+		val, err = cpu.mmu.read(absAddr)
+		if err != nil {
+			break
+		}
 	case loc_IM:
 		val, err = cpu.mmu.read(addr + 1)
 	case loc_A:
@@ -509,9 +522,126 @@ func (cpu *cpu) incrementPC() error {
 	return nil
 }
 
+// getSP transforms the internal stack pointer register into its actual address
+func (cpu *cpu) getSP() uint16 {
+	return uint16(cpu.regs.sp) + 0x100
+}
+
+// push pushes a byte onto the stack
+func (cpu *cpu) push(val uint8) error {
+	err := cpu.mmu.write(val, cpu.getSP())
+	if err != nil {
+		return err
+	}
+	cpu.regs.sp--
+	return nil
+}
+
+// pop pops a byte off the stack
+func (cpu *cpu) pop() (uint8, error) {
+	val, err := cpu.mmu.read(cpu.getSP() + 1)
+	if err != nil {
+		return 0, err
+	}
+	cpu.regs.sp++
+	return val, nil
+}
+
+// push16 pushes a 16 bit value onto the stack and adjusts the stack pointer.
+func (cpu *cpu) push16(val uint16) error {
+	if err := cpu.push(msb(val)); err != nil {
+		return err
+	}
+	if err := cpu.push(lsb(val)); err != nil {
+		return err
+	}
+	return nil
+}
+
+// pop16 pops a 16 bit value off the stack and adjusts the stack pointer.
+func (cpu *cpu) pop16() (uint16, error) {
+	lsByte, err := cpu.pop()
+	if err != nil {
+		return 0, nil
+	}
+	msByte, err := cpu.pop()
+	if err != nil {
+		return 0, nil
+	}
+	return make16BitValue(msByte, lsByte), nil
+}
+
 /***********************************************/
 /*             Opcode Functions                */
 /***********************************************/
+
+// op_RTS is responsible for returning from subroutines
+func (cpu *cpu) op_RTS() error {
+	cycles, err := cpu.getOpCycles()
+	if err != nil {
+		return err
+	}
+
+	newPC, err := cpu.pop16()
+	if err != nil {
+		return err
+	}
+
+	cpu.regs.pc = newPC + 1
+
+	cpu.cycles += cycles
+
+	return nil
+}
+
+// op_JSR is responsible for jumping to a subroutine
+func (cpu *cpu) op_JSR() error {
+	cycles, err := cpu.getOpCycles()
+	if err != nil {
+		return err
+	}
+
+	newPC, err := cpu.getJumpAddress()
+	if err != nil {
+		return err
+	}
+
+	cpu.push16(cpu.regs.pc + 2)
+
+	cpu.regs.pc = newPC
+
+	cpu.cycles += cycles
+
+	return nil
+}
+
+// op_BIT is responsible for all bit test operations
+func (cpu *cpu) op_BIT() error {
+	cycles, err := cpu.getOpCycles()
+	if err != nil {
+		return err
+	}
+
+	val, _, err := cpu.getSourceValue()
+	if err != nil {
+		return err
+	}
+
+	finalVal := cpu.regs.a & val
+
+	err = cpu.incrementPC()
+	if err != nil {
+		return err
+	}
+
+	cpu.cycles += cycles
+
+	cpu.regs.z = (finalVal == 0)
+	cpu.regs.v = (val & BIT_6_MASK) != 0
+	cpu.regs.n = (val & NEGATIVE_MASK) != 0
+
+	return nil
+}
 
 // op_INC is responsible for all increment operations
 func (cpu *cpu) op_INC() error {
@@ -545,7 +675,7 @@ func (cpu *cpu) op_INC() error {
 	}
 
 	cpu.regs.n = false
-	if finalVal & NEGATIVE_MASK != 0 {
+	if finalVal&NEGATIVE_MASK != 0 {
 		cpu.regs.n = true
 	}
 
@@ -578,14 +708,13 @@ func (cpu *cpu) op_DEC() error {
 
 	cpu.cycles += cycles
 
-
 	cpu.regs.z = false
 	if finalVal == 0 {
 		cpu.regs.z = true
 	}
 
 	cpu.regs.n = false
-	if finalVal & NEGATIVE_MASK != 0 {
+	if finalVal&NEGATIVE_MASK != 0 {
 		cpu.regs.n = true
 	}
 
@@ -614,7 +743,7 @@ func (cpu *cpu) op_TAY() error {
 	}
 
 	cpu.regs.n = false
-	if cpu.regs.y & NEGATIVE_MASK != 0 {
+	if cpu.regs.y&NEGATIVE_MASK != 0 {
 		cpu.regs.n = true
 	}
 

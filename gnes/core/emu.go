@@ -159,9 +159,14 @@ func (emu *Emulator) loadRom(path string) error {
 // Step is the main way for external callers to step through emulation. This takes care
 // of fetching and executing opcodes/instructions, updating APU and PPU appropriately, etc.
 func (emu *Emulator) Step() error {
-	err := emu.cpu.stepInstruction()
+	cycles, err := emu.cpu.stepInstruction()
 	if err != nil {
 		return err
+	}
+	emu.ppu.catchupCycles += cycles * 3
+	err = emu.ppu.catchup()
+	if err != nil {
+		return nil
 	}
 	return nil
 }

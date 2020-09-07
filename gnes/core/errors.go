@@ -14,6 +14,8 @@ const (
 	err_UNIMPLEMENTED_OPCODE          = 9
 	err_MMC1_PRG_RAM_DISABLED         = 10
 	err_MMC1_INVALID_PRG_ROM_MODE_VAL = 11
+	err_UNWRITEABLE_PPU_REG           = 12
+	err_UNREADABLE_PPU_REG            = 13
 )
 
 var errToString = map[int]string{
@@ -28,6 +30,8 @@ var errToString = map[int]string{
 	err_UNIMPLEMENTED_OPCODE:          "Opcode unimplemented",
 	err_MMC1_PRG_RAM_DISABLED:         "PRG RAM is disabled on this MMC1 mapper",
 	err_MMC1_INVALID_PRG_ROM_MODE_VAL: "Invalid value %x for MMC1 PRG ROM mode",
+	err_UNWRITEABLE_PPU_REG:           "Illegal PPU register to write",
+	err_UNREADABLE_PPU_REG:            "Illegal PPU register to read",
 }
 
 type gError struct {
